@@ -2,7 +2,7 @@ Name: test-ring0
 Group: System Environment/Kernel
 License: GPLv2
 Version: 1.0.0
-Release: 1
+Release: 1%{dist}
 Summary: Ring0 Tests
 BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, sh-utils, tar
 BuildRequires: bzip2, findutils, gzip, m4, perl, make >= 3.78
