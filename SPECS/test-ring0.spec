@@ -1,7 +1,7 @@
 Name: test-ring0
 Group: System Environment/Kernel
 License: GPLv2
-Version: 1.0.3
+Version: 1.0.4
 Release: 1%{?dist}
 Summary: Ring0 Tests
 BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, sh-utils, tar
@@ -12,10 +12,10 @@ BuildRequires: elfutils-libelf-devel
 BuildRequires: xen-dom0-libs-devel xen-libs-devel
 Requires(post): /usr/sbin/depmod
 
-Source0: https://code.citrite.net/rest/archive/latest/projects/XS/repos/test-ring0/archive?at=v1.0.3&format=tar.gz&prefix=test-ring0-1.0.3#/test-ring0-1.0.3.tar.gz
+Source0: https://code.citrite.net/rest/archive/latest/projects/XS/repos/test-ring0/archive?at=v1.0.4&format=tar.gz&prefix=test-ring0-1.0.4#/test-ring0-1.0.4.tar.gz
 
 
-Provides: gitsha(https://code.citrite.net/rest/archive/latest/projects/XS/repos/test-ring0/archive?at=v1.0.3&format=tar.gz&prefix=test-ring0-1.0.3#/test-ring0-1.0.3.tar.gz) = 27a86d889554af9ed90b36ce52e4349b47cc38cb
+Provides: gitsha(https://code.citrite.net/rest/archive/latest/projects/XS/repos/test-ring0/archive?at=v1.0.4&format=tar.gz&prefix=test-ring0-1.0.4#/test-ring0-1.0.4.tar.gz) = 31fd4ec7dd309d24870efe0f789ca5a35bf27a94
 
 
 %description
