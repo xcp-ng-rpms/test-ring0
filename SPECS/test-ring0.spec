@@ -1,10 +1,10 @@
-%global package_speccommit 2cc68c53415b27b76fdfd217ceabf995be2ca265
+%global package_speccommit 1430558568a75ed43b3bfedcd8366687618b7a65
 %global package_srccommit v1.0.7
 Name: test-ring0
 Group: System Environment/Kernel
 License: GPLv2
 Version: 1.0.7
-Release: 3%{?xsrel}%{?dist}
+Release: 4%{?xsrel}%{?dist}
 Summary: Ring0 Tests
 BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, sh-utils, tar
 BuildRequires: bzip2, findutils, gzip, m4, perl, make >= 3.78
@@ -49,11 +49,14 @@ cd linux
 %{?_cov_results_package}
 
 %changelog
+* Wed Feb 26 2025 Alex Brett <alex.brett@cloud.com> - 1.0.7-4
+- Rebuild
+
 * Thu Mar 17 2022 Deli Zhang <deli.zhang@citrix.com> - 1.0.7-3
-* Bump release to 3
+- Bump release to 3
 
 * Thu Mar 17 2022 Deli Zhang <deli.zhang@citrix.com> - 1.0.7-2
-* CP-39193: Disable static analysis
+- CP-39193: Disable static analysis
 
 * Sun Mar 13 2022 Deli Zhang <deli.zhang@citrix.com> - 1.0.7-1
 - CP-39193: Add kernel livepatch test modules
