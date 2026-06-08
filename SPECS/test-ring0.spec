@@ -7,11 +7,12 @@ Version: 2.0.1
 Release: 8%{?xsrel}%{?dist}
 Summary: Ring0 Tests
 BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, tar
-BuildRequires: bzip2, findutils, gzip, m4, perl, make >= 3.78
+BuildRequires: bzip2, findutils, gzip, m4, make >= 3.78
 BuildRequires: gcc >= 2.96-98, binutils >= 2.12
 BuildRequires: kernel-devel
 BuildRequires: xen-libs-devel
 BuildRequires: elfutils-libelf-devel
+BuildRequires: dwarves
 BuildRequires: xssign-macros
 %{?_cov_buildrequires}
 Requires(post): /usr/sbin/depmod
