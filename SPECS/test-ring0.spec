@@ -4,7 +4,7 @@ Name: test-ring0
 Group: System Environment/Kernel
 License: GPLv2
 Version: 2.0.1
-Release: 8%{?xsrel}%{?dist}
+Release: 8%{?xsrel}.1%{?dist}
 Summary: Ring0 Tests
 BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, tar
 BuildRequires: bzip2, findutils, gzip, m4, perl, make >= 3.78
@@ -12,7 +12,9 @@ BuildRequires: gcc >= 2.96-98, binutils >= 2.12
 BuildRequires: kernel-devel
 BuildRequires: xen-libs-devel
 BuildRequires: elfutils-libelf-devel
+%if ! 0%{?xcpng}
 BuildRequires: xssign-macros
+%endif
 %{?_cov_buildrequires}
 Requires(post): /usr/sbin/depmod
 Source0: test-ring0-2.0.1.tar.gz
@@ -27,12 +29,14 @@ and performance of various bits of the Linux kernel.
 %autosetup -p1
 %{?_cov_prepare}
 
+%if ! 0%{?xcpng}
 %global certdir "%{_builddir}/certs"
 
 cp -r /etc/pki/xs-secureboot-dev-certs "%{certdir}"
 %certutil -d "%{dev_certdir}" -L -n "LINUX_SIGN_KEY_XS9_DEV" -r > "%{certdir}/kernel-dev.cer"
 pk12util -d sql:"%{certdir}" -W "" -n LINUX_SIGN_KEY_XS9_DEV -o "%{certdir}/key.p12"
 openssl pkcs12 -in "%{certdir}/key.p12" -passin pass: -nocerts -nodes -out "%{certdir}/private_key.pem"
+%endif
 
 %build
 cd linux
@@ -72,6 +76,9 @@ cd linux
 %{?_cov_results_package}
 
 %changelog
+* Mon Jun 08 2026 Yann Dirson <yann.dirson@vates.tech> - 2.0.1-8.1
+- (temporarily) Disable module-signing infrastructure
+
 * Wed Dec 03 2025 Kevin Lampis <kevin.lampis@citrix.com> - 2.0.1-8
 - CA-411782: Rebuild against kernel 6.6.98-13
 
