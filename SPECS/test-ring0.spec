@@ -1,20 +1,21 @@
-%global package_speccommit 2cc68c53415b27b76fdfd217ceabf995be2ca265
-%global package_srccommit v1.0.7
+%global package_speccommit 53ba8a919029ec3ce65eefdc1ef8e089672fa7e3
+%global package_srccommit v2.0.1
 Name: test-ring0
 Group: System Environment/Kernel
 License: GPLv2
-Version: 1.0.7
-Release: 3%{?xsrel}%{?dist}
+Version: 2.0.1
+Release: 8%{?xsrel}%{?dist}
 Summary: Ring0 Tests
-BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, sh-utils, tar
+BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, tar
 BuildRequires: bzip2, findutils, gzip, m4, perl, make >= 3.78
-BuildRequires: gcc >= 2.96-98, binutils >= 2.12, redhat-rpm-config >= 8.0.32.1
+BuildRequires: gcc >= 2.96-98, binutils >= 2.12
 BuildRequires: kernel-devel
-BuildRequires: elfutils-libelf-devel
 BuildRequires: xen-libs-devel
+BuildRequires: elfutils-libelf-devel
+BuildRequires: xssign-macros
 %{?_cov_buildrequires}
 Requires(post): /usr/sbin/depmod
-Source0: test-ring0-1.0.7.tar.gz
+Source0: test-ring0-2.0.1.tar.gz
 
 %description
 Assorted tests for components that ring0 is responsible for.  The
@@ -25,6 +26,13 @@ and performance of various bits of the Linux kernel.
 %prep
 %autosetup -p1
 %{?_cov_prepare}
+
+%global certdir "%{_builddir}/certs"
+
+cp -r /etc/pki/xs-secureboot-dev-certs "%{certdir}"
+%certutil -d "%{dev_certdir}" -L -n "LINUX_SIGN_KEY_XS9_DEV" -r > "%{certdir}/kernel-dev.cer"
+pk12util -d sql:"%{certdir}" -W "" -n LINUX_SIGN_KEY_XS9_DEV -o "%{certdir}/key.p12"
+openssl pkcs12 -in "%{certdir}/key.p12" -passin pass: -nocerts -nodes -out "%{certdir}/private_key.pem"
 
 %build
 cd linux
@@ -39,16 +47,64 @@ cd linux
      install
 %{?_cov_install}
 
+# The RPM build system blindly runs strip on all output files which also
+# destroys the signature on signed kernel modules. There is no way to disable
+# this behavior and upstream refused to add an exception for .ko files. The
+# macros below is more or less how Fedora and RHEL hack around this issue.
+# https://bugzilla.redhat.com/show_bug.cgi?id=1967291
+%define __modsign_install_post                          \
+  sign_file=%(find /usr/src/ -name sign-file | tail -1) \
+  find %{buildroot} -name "*.ko" -type f -exec ${sign_file} sha256 "%{certdir}/private_key.pem" "%{certdir}/kernel-dev.cer" {} \\;
+
+%define __spec_install_post \
+  %{?__debug_package:%{__debug_install_post}}\
+  %{__arch_install_post}\
+  %{__os_install_post}\
+  %{__modsign_install_post}
+
 %post
 /usr/sbin/depmod %{kernel_version}
 
 %files
-/lib/modules/%{kernel_version}/extra/*
+/lib/modules/%{kernel_version}/updates/*
 %{_bindir}/*
 
 %{?_cov_results_package}
 
 %changelog
+* Wed Dec 03 2025 Kevin Lampis <kevin.lampis@citrix.com> - 2.0.1-8
+- CA-411782: Rebuild against kernel 6.6.98-13
+
+* Thu Nov 13 2025 Lin Liu <lin.liu01@cloud.com> -2.0.1-7
+- CP-310158: Rebuild with kernel 6.6.98-12
+
+* Mon Nov 03 2025 Deli Zhang <deli.zhang@citrix.com> - 2.0.1-6
+- CP-310026: Bump release to 6, rebuild against kernel 6.6.98-9
+
+* Thu Sep 25 2025 Chunjie Zhu <chunjie.zhu@citrix.com> - 2.0.1-5
+- Bump release to 5, rebuild against kernel 6.6.98-5
+
+* Fri Aug 1 2025 Chunjie Zhu <chunjie.zhu@cloud.com> - 2.0.1-4
+- CP-308667: kernel upgrade, Bump release to 4
+
+* Fri Apr 11 2025 Ross Lagerwall <ross.lagerwall@citrix.com> - 2.0.1-3
+- CA-401825: Sign kernel module
+
+* Wed Mar 12 2025 Chunjie Zhu <chunjie.zhu@cloud.com> - 2.0.1-2
+- Update with NUMA enabled
+
+* Wed Mar 05 2025 Frediano Ziglio <frediano.ziglio@cloud.com> - 2.0.1-1
+- CP-53618: Use procfs instead of debugfs for Secure Boot
+
+* Thu Feb 13 2025 Chunjie Zhu <chunjie.zhu@cloud.com> - 2.0.0-3
+- Bump release to 3
+
+* Sun Jan 26 2025 Chunjie Zhu <chunjie.zhu@cloud.com> - 2.0.0-2
+- Update with kABI support
+
+* Fri Dec 06 2024 Ross Lagerwall <ross.lagerwall@citrix.com> - 2.0.0-1
+- Update to target the 6.6 kernel
+
 * Thu Mar 17 2022 Deli Zhang <deli.zhang@citrix.com> - 1.0.7-3
 * Bump release to 3
 
