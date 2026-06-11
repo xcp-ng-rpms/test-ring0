@@ -12,6 +12,7 @@ BuildRequires: gcc >= 2.96-98, binutils >= 2.12
 BuildRequires: kernel-devel
 BuildRequires: xen-libs-devel
 BuildRequires: elfutils-libelf-devel
+BuildRequires: dwarves
 %if ! 0%{?xcpng}
 BuildRequires: xssign-macros
 %endif
