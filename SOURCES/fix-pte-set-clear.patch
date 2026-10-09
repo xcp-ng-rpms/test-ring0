@@ -1,0 +1,47 @@
+From a875e73292cc6582b74eec0236e46a2fe4529bcc Mon Sep 17 00:00:00 2001
+From: Baptiste Le Duc <baptiste.le-duc@vates.tech>
+Date: Fri, 9 Oct 2026 17:41:02 +0200
+Subject: [PATCH 1/2] pte-set-clear-flags: use vmalloc() return value as the VA
+
+Linux commit 301fa9f2ddf7 ("mm: remove alloc_vm_area"), first in 5.10,
+drops alloc_vm_area(), so the 1.0.7 to 2.0.1 update of test-ring0 replaces
+alloc_vm_area()/free_vm_area() with vmalloc()/vfree() in pte_flags_run().
+The type of `area` and its use are left untouched, though.
+
+pte_flags_run() therefore stores the vmalloc() result in a `struct
+vm_struct *` and passes `area->addr` to apply_to_page_range(). vmalloc()
+returns the mapped virtual address itself, not a vm_struct, so `area->addr`
+reads a pointer out of the uninitialised contents of the freshly allocated
+buffer. The page walk then runs over a garbage address range instead of the
+allocation.
+
+Declare `area` as `void *` and pass it directly to apply_to_page_range().
+
+Assisted-by: Claude:claude-opus-5.5
+Signed-off-by: Baptiste Le Duc <baptiste.le-duc@vates.tech>
+---
+ linux/pte-set-clear-flags/pte-set-clear-flags.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/linux/pte-set-clear-flags/pte-set-clear-flags.c b/linux/pte-set-clear-flags/pte-set-clear-flags.c
+index 25ff200..7eccf31 100644
+--- a/linux/pte-set-clear-flags/pte-set-clear-flags.c
++++ b/linux/pte-set-clear-flags/pte-set-clear-flags.c
+@@ -39,7 +39,7 @@ static int pte_flags_run(struct xst_test *test)
+ 	struct pte_flags_test *t = container_of(test,
+ 						struct pte_flags_test,
+ 						test);
+-	struct vm_struct *area;
++	void *area;
+ 	unsigned size = PAGE_SIZE * t->params.pages;
+ 	unsigned i;
+ 	pte_t pte;
+@@ -59,7 +59,7 @@ static int pte_flags_run(struct xst_test *test)
+ 		/* Walk the full VA range, setting one bit and
+ 		   clearing another. */
+ 		apply_to_page_range(current->active_mm,
+-				    (unsigned long)area->addr, size, f, &pte);
++				    (unsigned long)area, size, f, &pte);
+ 
+ 		stats_stop(&t->stats.set_and_clear);
+ 	}

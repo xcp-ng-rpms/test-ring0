@@ -16,6 +16,7 @@ BuildRequires: dwarves
 %{?_cov_buildrequires}
 Requires(post): /usr/sbin/depmod
 Source0: test-ring0-2.0.1.tar.gz
+Patch0: fix-pte-set-clear.patch
 
 %description
 Assorted tests for components that ring0 is responsible for.  The
