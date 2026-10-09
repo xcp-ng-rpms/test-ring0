@@ -17,6 +17,7 @@ BuildRequires: dwarves
 Requires(post): /usr/sbin/depmod
 Source0: test-ring0-2.0.1.tar.gz
 Patch0: fix-pte-set-clear.patch
+Patch1: fix-set-memory-uc.patch
 
 %description
 Assorted tests for components that ring0 is responsible for.  The
