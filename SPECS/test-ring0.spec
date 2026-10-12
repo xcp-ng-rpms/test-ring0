@@ -4,7 +4,7 @@ Name: test-ring0
 Group: System Environment/Kernel
 License: GPLv2
 Version: 2.0.1
-Release: 8%{?xsrel}%{?dist}
+Release: 8%{?xsrel}.1%{?dist}
 Summary: Ring0 Tests
 BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, tar
 BuildRequires: bzip2, findutils, gzip, m4, make >= 3.78
@@ -52,6 +52,14 @@ cd linux
 %{?_cov_results_package}
 
 %changelog
+* Mon Oct 12 2026 Baptiste Le Duc <baptiste.le-duc@vates.tech> - 2.0.1-8.1
+- Remove unused BuildRequires: perl (Yann Dirson)
+- Add BuildRequires: dwarves (Corentin Oparowski)
+- Remove module signing: drop BuildRequires: xssign-macros
+- Support XCP-ng 9: fix two regressions from the 2.0.1 update:
+    - pte-set-clear-flags: use vmalloc() result as the VA, not a vm_struct
+    - set-memory-uc: keep the test result when restoring WB
+
 * Wed Dec 03 2025 Kevin Lampis <kevin.lampis@citrix.com> - 2.0.1-8
 - CA-411782: Rebuild against kernel 6.6.98-13
 
