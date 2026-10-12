@@ -13,7 +13,6 @@ BuildRequires: kernel-devel
 BuildRequires: xen-libs-devel
 BuildRequires: elfutils-libelf-devel
 BuildRequires: dwarves
-BuildRequires: xssign-macros
 %{?_cov_buildrequires}
 Requires(post): /usr/sbin/depmod
 Source0: test-ring0-2.0.1.tar.gz
@@ -28,13 +27,6 @@ and performance of various bits of the Linux kernel.
 %autosetup -p1
 %{?_cov_prepare}
 
-%global certdir "%{_builddir}/certs"
-
-cp -r /etc/pki/xs-secureboot-dev-certs "%{certdir}"
-%certutil -d "%{dev_certdir}" -L -n "LINUX_SIGN_KEY_XS9_DEV" -r > "%{certdir}/kernel-dev.cer"
-pk12util -d sql:"%{certdir}" -W "" -n LINUX_SIGN_KEY_XS9_DEV -o "%{certdir}/key.p12"
-openssl pkcs12 -in "%{certdir}/key.p12" -passin pass: -nocerts -nodes -out "%{certdir}/private_key.pem"
-
 %build
 cd linux
 %{?_cov_wrap} %{__make} KDIR=/lib/modules/%{kernel_version}/build
@@ -47,21 +39,6 @@ cd linux
      DEPMOD=/bin/true \
      install
 %{?_cov_install}
-
-# The RPM build system blindly runs strip on all output files which also
-# destroys the signature on signed kernel modules. There is no way to disable
-# this behavior and upstream refused to add an exception for .ko files. The
-# macros below is more or less how Fedora and RHEL hack around this issue.
-# https://bugzilla.redhat.com/show_bug.cgi?id=1967291
-%define __modsign_install_post                          \
-  sign_file=%(find /usr/src/ -name sign-file | tail -1) \
-  find %{buildroot} -name "*.ko" -type f -exec ${sign_file} sha256 "%{certdir}/private_key.pem" "%{certdir}/kernel-dev.cer" {} \\;
-
-%define __spec_install_post \
-  %{?__debug_package:%{__debug_install_post}}\
-  %{__arch_install_post}\
-  %{__os_install_post}\
-  %{__modsign_install_post}
 
 %post
 /usr/sbin/depmod %{kernel_version}
