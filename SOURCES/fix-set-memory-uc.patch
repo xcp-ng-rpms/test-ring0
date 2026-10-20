@@ -1,0 +1,54 @@
+From e29b23bfd4f13dbcebe71b2225242f24d805014c Mon Sep 17 00:00:00 2001
+From: Baptiste Le Duc <baptiste.le-duc@vates.tech>
+Date: Fri, 9 Oct 2026 17:41:18 +0200
+Subject: [PATCH 2/2] set-memory-uc: keep the test result when restoring WB on
+ exit
+
+The 1.0.7 to 2.0.1 update of test-ring0 now overwrites `ret` by storing
+set_memory_wb() result in it, so any failure detected by the test is
+discarded and the test reports success as long as the final restore to WB
+works.
+
+Store the result of the restoring set_memory_wb() in a separate `err`
+and return the test result in `ret`, falling back to `err` only when the
+test itself passed, so a failure already stored in `ret` is not
+overwritten.
+
+If the restore fails, the direct-map PTE may still be UC/WC and the UC
+memtype reserved by set_memory_uc() is not released. Freeing the page would
+hand that to the next user of the page, leading to a memory type mismatch
+with any WB alias. Leak the page instead, as dma-direct and swiotlb do when
+set_memory_encrypted() fails.
+
+Assisted-by: Claude:claude-opus-5.5
+Signed-off-by: Baptiste Le Duc <baptiste.le-duc@vates.tech>
+---
+ linux/set-memory-uc/set-memory-uc.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/linux/set-memory-uc/set-memory-uc.c b/linux/set-memory-uc/set-memory-uc.c
+index ee86e77..8cdec2b 100644
+--- a/linux/set-memory-uc/set-memory-uc.c
++++ b/linux/set-memory-uc/set-memory-uc.c
+@@ -60,7 +60,7 @@ static int set_memory_uc_run(struct xst_test *test)
+ 	pte_t *pte;
+ 	u64 val;
+ 	unsigned int level;
+-	int ret = 0;
++	int ret, err;
+ 
+ 	t->stats.pte_before = 0;
+ 	t->stats.pte_uc = 0;
+@@ -149,7 +149,11 @@ static int set_memory_uc_run(struct xst_test *test)
+ 	}
+ 
+   out:
+-	ret = set_memory_wb((unsigned long)virt, 1);
++	err = set_memory_wb((unsigned long)virt, 1);
++	if (err) {
++		pr_err("set_memory_wb() failed when restoring WB, leaking page\n");
++		return ret ?: err;
++	}
+ 	__free_page(page);
+ 	return ret;
+ }
